@@ -420,6 +420,8 @@ public class PokeTradeBotLZA(PokeTradeHub<PA9> Hub, PokeBotState Config) : PokeR
             {
                 Log("Trade partner is not on UnliTID, ending after one trade.");
                 break;
+            } else {
+                Log("Trade partner is on UnliTID, preparing for another trade.");
             }
 
             await Click(R, 1_000, token).ConfigureAwait(false);
