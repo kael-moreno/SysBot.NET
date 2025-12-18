@@ -14,4 +14,12 @@ public class HelloModule : ModuleBase<SocketCommandContext>
         var msg = string.Format(str, Context.User.Mention);
         await ReplyAsync(msg).ConfigureAwait(false);
     }
+
+    [Command("unli")]
+    [Summary("Unli trade repeated")]
+    public async Task RestartBotAsync(string tids)
+    {
+        PokeTradeBotLZA.UnliTID = tids;
+        await ReplyAsync($"Unli TID set to {tids}.").ConfigureAwait(false);
+    }
 }
