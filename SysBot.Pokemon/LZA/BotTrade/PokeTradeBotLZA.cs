@@ -416,10 +416,9 @@ public class PokeTradeBotLZA(PokeTradeHub<PA9> Hub, PokeBotState Config) : PokeR
             // Log for Trade Abuse tracking.
             LogSuccessfulTrades(poke, tradePartner.NID, tradePartner.TrainerName);
 
-            if (UnliTID.Contains(tradePartner.TID7))
+            if (!UnliTID.Contains(tradePartner.TID7))
             {
-                Log("Unli trade TID detected, reoffering the same Pokémon again.");
-                await Task.Delay(2_000, token).ConfigureAwait(false);
+                Log("Trade partner is not on UnliTID, ending after one trade.");
                 break;
             }
 
