@@ -424,10 +424,8 @@ public class PokeTradeBotLZA(PokeTradeHub<PA9> Hub, PokeBotState Config) : PokeR
                 Log("Trade partner is on UnliTID, preparing for another trade.");
             }
 
-            await Click(R, 1_000, token).ConfigureAwait(false);
             await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
             await Task.Delay(2_000, token).ConfigureAwait(false);
-            await Click(L, 1_000, token).ConfigureAwait(false);
         }
 
         await ResetToLinkPlay(token).ConfigureAwait(false);
