@@ -25,6 +25,7 @@
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
     <PublishTrimmed>false</PublishTrimmed>
     <SelfContained>false</SelfContained>
+    <BaseOutputPath>D:\Switch\Sysbot\WinForms</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>

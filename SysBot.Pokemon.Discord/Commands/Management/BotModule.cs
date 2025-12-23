@@ -1,6 +1,7 @@
 using Discord;
 using Discord.Commands;
 using PKHeX.Core;
+using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -120,5 +121,24 @@ public class BotModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new(
             bot.Start();
             await Context.Channel.EchoAndReply($"The bot at {ip} ({c.Label}) has been commanded to Restart.").ConfigureAwait(false);
         }
+    }
+
+    [Command("rebootpi")]
+    [Alias("rebootrpi")]
+    [Summary("RebootRPI")]
+    public async Task RebootRPI()
+    {
+        var me = SysCord<T>.Runner;
+        foreach (var bot in me.Bots)
+        {
+            if (bot.Bot is not PokeRoutineExecutorBase b)
+                continue;
+
+            bot.Stop();
+            await Context.Channel.EchoAndReply($"The bot at ({bot.Bot.Connection.Label}) has been commanded to Stop.").ConfigureAwait(false);
+        }
+        await ReplyAsync($"Rebooting...").ConfigureAwait(false);
+        System.Diagnostics.Process.Start(new ProcessStartInfo() { FileName = "sudo", Arguments = "reboot" });
+
     }
 }

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <StartupObject>SysBot.Pokemon.ConsoleApp.Program</StartupObject>
+    <BaseOutputPath>D:\Switch\Sysbot\ConsoleApp</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
