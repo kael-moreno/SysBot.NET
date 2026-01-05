@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
 using PKHeX.Core;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SysBot.Pokemon.Discord;
@@ -21,19 +22,21 @@ public static class QueueHelper<T> where T : PKM, new()
 
         try
         {
-            const string helper = "I've added you to the queue! I'll message you here when your trade is starting.";
-            IUserMessage test = await trader.SendMessageAsync(helper).ConfigureAwait(false);
+            // const string helper = "I've added you to the queue! I'll message you here when your trade is starting.";
+            // IUserMessage test = await trader.SendMessageAsync(helper).ConfigureAwait(false);
 
             // Try adding
             var result = AddToTradeQueue(context, trade, code, trainer, sig, routine, type, trader, out var msg);
+            var embed = CreateEmbedMessage(result, trade, routine, type, trader);
 
             // Notify in channel
-            await context.Channel.SendMessageAsync(msg).ConfigureAwait(false);
+            // await context.Channel.SendMessageAsync(msg).ConfigureAwait(false);
+            await context.Channel.SendMessageAsync(embed: embed).ConfigureAwait(false);
             // Notify in PM to mirror what was said in the channel.
             // Only tell them a trade code if it was successful.
             if (result)
-                msg += $"\nYour trade code will be **{code:0000 0000}**.";
-            await trader.SendMessageAsync($"{msg}").ConfigureAwait(false);
+                msg += $"\nSend ko **Trade Code**, wait lang.";
+            // await trader.SendMessageAsync($"{msg}").ConfigureAwait(false);
 
             // Clean Up
             if (result)
@@ -45,7 +48,7 @@ public static class QueueHelper<T> where T : PKM, new()
             else
             {
                 // Delete our "I'm adding you!", and send the same message that we sent to the general channel.
-                await test.DeleteAsync().ConfigureAwait(false);
+                // await test.DeleteAsync().ConfigureAwait(false);
             }
         }
         catch (HttpException ex)
@@ -76,7 +79,7 @@ public static class QueueHelper<T> where T : PKM, new()
 
         if (added == QueueResultAdd.AlreadyInQueue)
         {
-            msg = "Sorry, you are already in the queue.";
+            msg = "Nasa queue ka na beh! Maya na ulit!";
             return false;
         }
 
@@ -88,8 +91,8 @@ public static class QueueHelper<T> where T : PKM, new()
 
         var pokeName = "";
         if (t == PokeTradeType.Specific && pk.Species != 0)
-            pokeName = $" Receiving: {GameInfo.GetStrings("en").Species[pk.Species]}.";
-        msg = $"{user.Mention} - Added to the {type} queue{ticketID}. Current Position: {position.Position}.{pokeName}";
+            pokeName = $" Receiving: **{GameInfo.GetStrings("en").Species[pk.Species]}**.";
+        msg = $"{user.Mention} - Na-add na kita sa {type} queue{ticketID}. Current Position: {position.Position}.{pokeName}";
 
         var botct = Info.Hub.Bots.Count;
         if (position.Position > botct)
@@ -138,5 +141,74 @@ public static class QueueHelper<T> where T : PKM, new()
                 break;
         }
         await context.Channel.SendMessageAsync(message).ConfigureAwait(false);
+    }
+
+    private static Embed CreateEmbedMessage(bool result, T trade, PokeRoutineType routine, PokeTradeType type, SocketUser trader)
+    {
+        string spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
+        string raihanUrl = "https://i.pinimg.com/564x/a2/44/0e/a2440e48f1c34d9f2fd66d4a4342df80.jpg";
+        var thumbnailUrl = raihanUrl;
+
+        var userID = trader.Id;
+        var hub = SysCord<T>.Runner.Hub;
+        var Info = hub.Queues.Info;
+
+        var shinyPath = trade.IsShiny ? $"shiny/{trade.Species}.png" : $"{trade.Species}.png";
+        var position = Info.CheckPosition(userID, routine);
+        var otName = $" ({trade.OriginalTrainerName})";
+
+        var embed = new EmbedBuilder()
+            .WithTitle(result ? $"{trader.Username} - Nasa {routine} queue ka na!" : "Urgh, di ka ma-add sa queue hays.")
+            .WithDescription(result ? "Wait mo lang turn mo beh! DM kita pag ikaw na." : "Di ka ma-add. Try ulit!")
+            .WithColor(result ? Color.Green : Color.Red);
+        // .WithFooter(footer => footer.Text = "LordGrim x Raihan Bot")
+
+        if (type == PokeTradeType.Specific)
+        {
+            var isShiny = trade.IsShiny ? "SHINY " : "";
+            var ball = GameInfo.GetStrings("en").Item[trade.Ball];
+            var ivs = $"{trade.IV_ATK} Atk / {trade.IV_DEF} Def / " +
+                $"{trade.IV_HP} Hp / {trade.IV_SPA} SpA / " +
+                $"{trade.IV_SPD} SpD / {trade.IV_SPE} Spe";
+            var evs = $"{trade.EV_ATK} Atk / {trade.EV_DEF} Def / " +
+                $"{trade.EV_HP} Hp / {trade.EV_SPA} SpA / " +
+                $"{trade.EV_SPD} SpD / {trade.EV_SPE} Spe";
+
+            var requestContent = $"**Ball:** {ball}\n" +
+                $"**IV Stats:** {ivs}\n" +
+                $"**EV Stats:** {evs}";
+
+            if (trade.HeldItem != 0)
+                requestContent += $"\n**Held Item:** {GameInfo.GetStrings("en").Item[trade.HeldItem]}";
+
+            if (trade.Moves.Length != 0)
+            {
+                List<string> movesList = new List<string>();
+                foreach (var move in trade.Moves)
+                {
+                    movesList.Add(GameInfo.GetStrings("en").Move[move]);
+                }
+                var moves = string.Join(" / ", movesList);
+                requestContent += $"\n**Moves:**\n{moves}";
+            }
+
+            thumbnailUrl = $"{spriteUrl}{shinyPath}";
+            embed
+                .AddField("Trainer", $"{trader.Mention}{otName}", true)
+                .AddField("Current Position", position.Position.ToString(), true)
+                .AddField($"Requesting: {isShiny}{GameInfo.GetStrings("en").Species[trade.Species]}", requestContent);
+
+        }
+        else
+        {
+            embed
+                .AddField("Trainer", $"{trader.Mention}", true)
+                .AddField("Current Position", position.Position.ToString(), true);
+        }
+
+        embed
+            .WithThumbnailUrl($"{thumbnailUrl}");
+
+        return embed.Build();
     }
 }

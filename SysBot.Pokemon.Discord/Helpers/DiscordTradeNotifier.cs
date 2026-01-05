@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.WebSocket;
 using PKHeX.Core;
 using System;
@@ -19,31 +19,44 @@ public class DiscordTradeNotifier<T>(T Data, PokeTradeTrainerInfo Info, int Code
 
     public void TradeInitialize(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info)
     {
-        var receive = Data.Species == 0 ? string.Empty : $" ({Data.Nickname})";
-        Trader.SendMessageAsync($"Initializing trade{receive}. Please be ready. Your code is **{Code:0000 0000}**.").ConfigureAwait(false);
+        var receive = Data.Species == 0 ? "Game na!" : $"Ready na ({Data.Nickname}) mo!";
+        var builder = CreateEmbedBuilder(title: $"{receive}",
+            description: $"Eto na Trade Code mo beh: **{Code:0000 0000}**.",
+            color: Color.Gold);
+        Trader.SendMessageAsync(embed: builder.Build()).ConfigureAwait(false);
     }
 
     public void TradeSearching(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info)
     {
         var name = Info.TrainerName;
         var trainer = string.IsNullOrEmpty(name) ? string.Empty : $", {name}";
-        Trader.SendMessageAsync($"I'm waiting for you{trainer}! Your code is **{Code:0000 0000}**. My IGN is **{routine.InGameName}**.").ConfigureAwait(false);
+        var builder = CreateEmbedBuilder(title: $"Trade Code: {Code:0000 0000}",
+            description: $"Searching na ko{trainer}! Ayan na trade code natin.",
+            color: Color.Gold)
+            .AddField("IGN", routine.InGameName, true);
+        Trader.SendMessageAsync(embed: builder.Build()).ConfigureAwait(false);
     }
 
     public void TradeCanceled(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info, PokeTradeResult msg)
     {
         OnFinish?.Invoke(routine);
-        Trader.SendMessageAsync($"Trade canceled: {msg}").ConfigureAwait(false);
+        Trader.SendMessageAsync($"Na-cancel trade natin hays: {msg}").ConfigureAwait(false);
     }
 
     public void TradeFinished(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info, T result)
     {
         OnFinish?.Invoke(routine);
         var tradedToUser = Data.Species;
-        var message = tradedToUser != 0 ? $"Trade finished. Enjoy your {(Species)tradedToUser}!" : "Trade finished!";
-        Trader.SendMessageAsync(message).ConfigureAwait(false);
+
+        var message = tradedToUser != 0 ? $"Tapos na! Nabigay ko na {(Species)tradedToUser} mo! Alis na ko, bye!" : "Yey! Alis na ko, bye!";
+
+        var builder = CreateEmbedBuilder(title: $"Yey! Trade finished!",
+            description: $"{message}",
+            color: Color.Green);
+
+        Trader.SendMessageAsync(embed: builder.Build()).ConfigureAwait(false);
         if (result.Species != 0 && Hub.Config.Discord.ReturnPKMs)
-            Trader.SendPKMAsync(result, "Here's what you traded me!").ConfigureAwait(false);
+            Trader.SendPKMAsync(result, "Eto binigay mo, just in case need mo hehehe...").ConfigureAwait(false);
     }
 
     public void SendNotification(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info, string message)
@@ -84,5 +97,13 @@ public class DiscordTradeNotifier<T>(T Data, PokeTradeTrainerInfo Info, int Code
         });
         var msg = $"Here are the details for `{r.Seed:X16}`:";
         Trader.SendMessageAsync(msg, embed: embed.Build()).ConfigureAwait(false);
+    }
+
+    private EmbedBuilder CreateEmbedBuilder(string title, string description, Color color)
+    {
+        return new EmbedBuilder()
+            .WithTitle($"{title}")
+            .WithDescription($"{description}")
+            .WithColor(color);
     }
 }
