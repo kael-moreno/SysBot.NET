@@ -16,6 +16,7 @@ public class PokeTradeBotLZA(PokeTradeHub<PA9> Hub, PokeBotState Config) : PokeR
 {
 
     public static String UnliTID = "996212";
+    public static int RandomTradeCode = -1;
     private readonly TradeSettings TradeSettings = Hub.Config.Trade;
     private readonly TradeAbuseSettings AbuseSettings = Hub.Config.TradeAbuse;
 
@@ -286,9 +287,11 @@ public class PokeTradeBotLZA(PokeTradeHub<PA9> Hub, PokeBotState Config) : PokeR
         await Task.Delay(Hub.Config.Timings.ExtraTimeOpenCodeEntry, token).ConfigureAwait(false);
 
         var code = poke.Code;
+        if (RandomTradeCode == -1)
+            RandomTradeCode = code;
 
         // LZA has more complex logic for entering the link code.
-        await EnterLinkCodeLZA(code, token).ConfigureAwait(false);
+        await EnterLinkCodeLZA(RandomTradeCode, token).ConfigureAwait(false);
 
         // Wait for Barrier to trigger all bots simultaneously.
         WaitAtBarrierIfApplicable(token);
