@@ -1,10 +1,11 @@
-﻿using Discord;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using PKHeX.Core;
 using SysBot.Base;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace SysBot.Pokemon.Discord;
@@ -67,12 +68,32 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
         {
             if (detail.Type == PokeTradeType.Random)
                 return;
-            c.SendMessageAsync(GetMessage(bot, detail));
+            //c.SendMessageAsync(GetMessage(bot, detail));
+            c.SendMessageAsync(embed: GetMessage(bot, detail));
         }
 
         Action<PokeRoutineExecutorBase, PokeTradeDetail<T>> l = Logger;
         SysCord<T>.Runner.Hub.Queues.Forwarders.Add(l);
-        static string GetMessage(PokeRoutineExecutorBase bot, PokeTradeDetail<T> detail) => $"> [{DateTime.Now:hh:mm:ss}] - {bot.Connection.Label} is now trading (ID {detail.ID}) {detail.Trainer.TrainerName}";
+        // static string GetMessage(PokeRoutineExecutorBase bot, PokeTradeDetail<T> detail) => $"> [{DateTime.Now:hh:mm:ss}] - {bot.Connection.Label} is now trading (ID {detail.ID}) {detail.Trainer.TrainerName}";
+        static Embed GetMessage(PokeRoutineExecutorBase bot, PokeTradeDetail<T> detail)
+        {
+            string spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/refs/heads/master/sprites/pokemon/other/home/";
+            string raihanUrl = "https://i.pinimg.com/564x/a2/44/0e/a2440e48f1c34d9f2fd66d4a4342df80.jpg";
+            var thumbnailUrl = raihanUrl;
+
+            var shinyPath = detail.TradeData.IsShiny ? "shiny/" : "";
+            var genderPath = detail.TradeData.Gender == 1 ? "female/" : "";
+            var spritePath = $"{detail.TradeData.Species}.png";
+
+            thumbnailUrl = $"{spriteUrl}{shinyPath}{genderPath}{spritePath}";
+
+            var embedBuilder = new EmbedBuilder()
+                .WithTitle("Next In Queue na!")
+                .WithDescription($"Ikaw na next kong ka-trade, <@{detail.Trainer.ID}>! Ready ka na! (ID {detail.ID})")
+                .WithThumbnailUrl(thumbnailUrl)
+                .WithColor(Color.Magenta);
+            return embedBuilder.Build();
+        } 
 
         var entry = new TradeStartAction(cid, l, c.Name);
         Channels.Add(cid, entry);
@@ -121,4 +142,14 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
         Name = channel.Name,
         Comment = $"Added by {Context.User.Username} on {DateTime.Now:yyyy.MM.dd-hh:mm:ss}",
     };
+
+    private Embed CreateEmbedBuilder(string title, string description)
+    {
+        var embedBuilder = new EmbedBuilder()
+            .WithTitle(title)
+            .WithDescription($"{description}")
+            .WithImageUrl("https://static0.srcdn.com/wordpress/wp-content/uploads/2022/11/pokemon-sword-shield-raihan-lose.jpg")
+            .WithColor(Color.Magenta);
+        return embedBuilder.Build();
+    }
 }

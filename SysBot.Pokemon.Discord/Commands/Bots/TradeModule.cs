@@ -29,7 +29,7 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
             x.Value = msg;
             x.IsInline = false;
         });
-        await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
+        await ReplyAsync("Eto yung mga nasa queue:", embed: embed.Build()).ConfigureAwait(false);
     }
 
     [Command("trade")]
@@ -54,24 +54,25 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         if (set.InvalidLines.Count != 0 || set.Species is 0)
         {
             var sb = new StringBuilder(128);
-            sb.AppendLine("Unable to parse Showdown Set.");
+            sb.AppendLine("Di ko ma-gets yan. Check mo error sa baba.");
             var invalidlines = set.InvalidLines;
             if (invalidlines.Count != 0)
             {
                 var localization = BattleTemplateParseErrorLocalization.Get();
-                sb.AppendLine("Invalid lines detected:\n```");
+                sb.AppendLine("\n**Invalid lines detected:**");
                 foreach (var line in invalidlines)
                 {
                     var error = line.Humanize(localization);
                     sb.AppendLine(error);
                 }
-                sb.AppendLine("```");
+                sb.AppendLine("\n");
             }
             if (set.Species is 0)
-                sb.AppendLine("Species could not be identified. Check your spelling.");
+                sb.AppendLine("Parang walang ganyan beh! Check mo spelling!");
 
             var msg = sb.ToString();
-            await ReplyAsync(msg).ConfigureAwait(false);
+            var embed = CreateEmbedBuilder("Hmm, mali!!!", msg);
+            await ReplyAsync(embed: embed).ConfigureAwait(false);
             return;
         }
 
@@ -104,8 +105,9 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         catch (Exception ex)
         {
             LogUtil.LogSafe(ex, nameof(TradeModule<T>));
-            var msg = $"Oops! An unexpected problem happened with this Showdown Set:\n```{string.Join("\n", set.GetSetLines())}```";
-            await ReplyAsync(msg).ConfigureAwait(false);
+            var msg = $"Di ko ma-gets yan. Check mo error sa baba. :\n```{string.Join("\n", set.GetSetLines())}```";
+            var embed = CreateEmbedBuilder("Hmm, mali!!!", msg);
+            await ReplyAsync(embed: embed).ConfigureAwait(false);
         }
     }
 
@@ -183,7 +185,8 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         var attachment = Context.Message.Attachments.FirstOrDefault();
         if (attachment == null)
         {
-            await ReplyAsync("No attachment provided!").ConfigureAwait(false);
+            var embed = CreateEmbedBuilder("Hmm, mali!!!", "Wala kang attachment na binigay!");
+            await ReplyAsync(embed: embed).ConfigureAwait(false);
             return;
         }
 
@@ -191,7 +194,8 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         var pk = GetRequest(att);
         if (pk == null)
         {
-            await ReplyAsync("Attachment provided is not compatible with this module!").ConfigureAwait(false);
+            var embed = CreateEmbedBuilder("Hmm, mali!!!", "Di ko ma-gets yan. Siguraduhin mong tama yang file na binigay mo!");
+            await ReplyAsync(embed: embed).ConfigureAwait(false);
             return;
         }
 
@@ -216,7 +220,8 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         if (!la.Valid)
         {
             // Disallow trading illegal Pokémon.
-            await ReplyAsync($"{typeof(T).Name} attachment is not legal, and cannot be traded!").ConfigureAwait(false);
+            var embed = CreateEmbedBuilder("Hmm, mali!!!", $"Hoyyyy!!! Illegal yang {typeof(T).Name} na binigay mo!!!");
+            await ReplyAsync(embed: embed).ConfigureAwait(false);
             return;
         }
 
@@ -224,23 +229,36 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         if (!pk.CanBeTraded(enc))
         {
             // Disallow anything that cannot be traded from the game (e.g. Fusions).
-            await ReplyAsync("Provided Pokémon content is blocked from trading!").ConfigureAwait(false);
+            var embed = CreateEmbedBuilder("Hmm, mali!!!", $"Hindi pwedeng itrade yang binigay mo!!!");
+            await ReplyAsync(embed: embed).ConfigureAwait(false);
             return;
         }
         var cfg = Info.Hub.Config.Trade;
         if (cfg.DisallowNonNatives && (enc.Context != pk.Context || pk.GO))
         {
             // Allow the owner to prevent trading entities that require a HOME Tracker even if the file has one already.
+            var embed = CreateEmbedBuilder("Hmm, mali!!!", $"Hindi pwedeng i-trade yang {typeof(T).Name} na binigay mo!");
             await ReplyAsync($"{typeof(T).Name} attachment is not native, and cannot be traded!").ConfigureAwait(false);
             return;
         }
         if (cfg.DisallowTracked && pk is IHomeTrack { HasTracker: true })
         {
             // Allow the owner to prevent trading entities that already have a HOME Tracker.
+            var embed = CreateEmbedBuilder("Hmm, mali!!!", $"May HOME TRACKER na yang {typeof(T).Name} na binigay mo! Di pwede i-trade.");
             await ReplyAsync($"{typeof(T).Name} attachment is tracked by HOME, and cannot be traded!").ConfigureAwait(false);
             return;
         }
 
         await QueueHelper<T>.AddToQueueAsync(Context, code, trainerName, sig, pk, PokeRoutineType.LinkTrade, PokeTradeType.Specific, usr).ConfigureAwait(false);
+    }
+
+    private Embed CreateEmbedBuilder(string title, string description)
+    {
+        var embedBuilder = new EmbedBuilder()
+            .WithTitle(title)
+            .WithDescription($"{description}")
+            .WithThumbnailUrl("https://i.pinimg.com/564x/a2/44/0e/a2440e48f1c34d9f2fd66d4a4342df80.jpg")
+            .WithColor(Color.Magenta);
+        return embedBuilder.Build();
     }
 }

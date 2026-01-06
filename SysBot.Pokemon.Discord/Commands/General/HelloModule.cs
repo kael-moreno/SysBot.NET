@@ -1,3 +1,4 @@
+using Discord;
 using Discord.Commands;
 using System.Threading.Tasks;
 
@@ -12,7 +13,9 @@ public class HelloModule : ModuleBase<SocketCommandContext>
     {
         var str = SysCordSettings.Settings.HelloResponse;
         var msg = string.Format(str, Context.User.Mention);
-        await ReplyAsync(msg).ConfigureAwait(false);
+
+        var embed = CreateEmbedBuilder("Yow!", $"Miss me, {Context.User.Mention}?");
+        await ReplyAsync(embed: embed).ConfigureAwait(false);
     }
 
     [Command("unli")]
@@ -20,7 +23,7 @@ public class HelloModule : ModuleBase<SocketCommandContext>
     public async Task RestartBotAsync(string tids)
     {
         PokeTradeBotLZA.UnliTID = tids;
-        await ReplyAsync($"Unli TID set to {tids}.").ConfigureAwait(false);
+        await ReplyAsync($"```Unli TID set to {tids}.```").ConfigureAwait(false);
     }
 
     [Command("randomcode")]
@@ -29,6 +32,16 @@ public class HelloModule : ModuleBase<SocketCommandContext>
     public async Task SetRandomTradeCode(int code)
     {
         PokeTradeBotLZA.RandomTradeCode = code;
-        await ReplyAsync($"Random Trade Code set to {code}.").ConfigureAwait(false);
+        await ReplyAsync($"```Random Trade Code set to {code}.```").ConfigureAwait(false);
+    }
+
+    private Embed CreateEmbedBuilder(string title, string description)
+    {
+        var embedBuilder = new EmbedBuilder()
+            .WithTitle(title)
+            .WithDescription($"{description}")
+            .WithImageUrl("https://static0.srcdn.com/wordpress/wp-content/uploads/2022/11/pokemon-sword-shield-raihan-lose.jpg")
+            .WithColor(Color.Magenta);
+        return embedBuilder.Build();
     }
 }
