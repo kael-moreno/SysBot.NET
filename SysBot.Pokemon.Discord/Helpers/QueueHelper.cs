@@ -166,17 +166,22 @@ public static class QueueHelper<T> where T : PKM, new()
         if (type == PokeTradeType.Specific)
         {
             var isShiny = trade.IsShiny ? "SHINY " : "";
-            var ball = GameInfo.GetStrings("en").Item[trade.Ball];
+            var ball = GameInfo.GetStrings("en").balllist[trade.Ball];
             var ivs = $"{trade.IV_ATK} Atk / {trade.IV_DEF} Def / " +
                 $"{trade.IV_HP} Hp / {trade.IV_SPA} SpA / " +
                 $"{trade.IV_SPD} SpD / {trade.IV_SPE} Spe";
-            var evs = $"{trade.EV_ATK} Atk / {trade.EV_DEF} Def / " +
+            
+            var requestContent = $"**Ball:** {ball}\n" +
+                $"**IV Stats:** {ivs}";
+
+            if (trade.EVTotal > 0)
+            {
+                var evs = $"{trade.EV_ATK} Atk / {trade.EV_DEF} Def / " +
                 $"{trade.EV_HP} Hp / {trade.EV_SPA} SpA / " +
                 $"{trade.EV_SPD} SpD / {trade.EV_SPE} Spe";
-
-            var requestContent = $"**Ball:** {ball}\n" +
-                $"**IV Stats:** {ivs}\n" +
-                $"**EV Stats:** {evs}";
+                requestContent += $"\n**EV Stats:** {evs}";
+            }
+       
 
             if (trade.HeldItem != 0)
                 requestContent += $"\n**Held Item:** {GameInfo.GetStrings("en").Item[trade.HeldItem]}";
