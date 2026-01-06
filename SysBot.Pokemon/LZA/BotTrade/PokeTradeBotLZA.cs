@@ -287,11 +287,11 @@ public class PokeTradeBotLZA(PokeTradeHub<PA9> Hub, PokeBotState Config) : PokeR
         await Task.Delay(Hub.Config.Timings.ExtraTimeOpenCodeEntry, token).ConfigureAwait(false);
 
         var code = poke.Code;
-        if (RandomTradeCode == -1)
-            RandomTradeCode = code;
+        if (poke.Type == PokeTradeType.Random && RandomTradeCode != -1)
+            code = RandomTradeCode;
 
         // LZA has more complex logic for entering the link code.
-        await EnterLinkCodeLZA(RandomTradeCode, token).ConfigureAwait(false);
+        await EnterLinkCodeLZA(code, token).ConfigureAwait(false);
 
         // Wait for Barrier to trigger all bots simultaneously.
         WaitAtBarrierIfApplicable(token);
