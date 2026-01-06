@@ -3,7 +3,9 @@ using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
 using PKHeX.Core;
+using SysBot.Base;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace SysBot.Pokemon.Discord;
@@ -61,7 +63,7 @@ public static class QueueHelper<T> where T : PKM, new()
     {
         return AddToQueueAsync(context, code, trainer, sig, trade, routine, type, context.User);
     }
-
+    
     private static bool AddToTradeQueue(SocketCommandContext context, T pk, int code, string trainerName, RequestSignificance sig, PokeRoutineType type, PokeTradeType t, SocketUser trader, out string msg)
     {
         var user = trader;
@@ -76,6 +78,8 @@ public static class QueueHelper<T> where T : PKM, new()
         var hub = SysCord<T>.Runner.Hub;
         var Info = hub.Queues.Info;
         var added = Info.AddToTradeQueue(trade, userID, sig == RequestSignificance.Owner);
+        
+        
 
         if (added == QueueResultAdd.AlreadyInQueue)
         {
@@ -145,7 +149,7 @@ public static class QueueHelper<T> where T : PKM, new()
 
     private static Embed CreateEmbedMessage(bool result, T trade, PokeRoutineType routine, PokeTradeType type, SocketUser trader)
     {
-        string spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
+        string spriteUrl = "https://raw.githubusercontent.com/PokeAPI/sprites/refs/heads/master/sprites/pokemon/other/home/";
         string raihanUrl = "https://i.pinimg.com/564x/a2/44/0e/a2440e48f1c34d9f2fd66d4a4342df80.jpg";
         var thumbnailUrl = raihanUrl;
 
@@ -153,7 +157,6 @@ public static class QueueHelper<T> where T : PKM, new()
         var hub = SysCord<T>.Runner.Hub;
         var Info = hub.Queues.Info;
 
-        var shinyPath = trade.IsShiny ? $"shiny/{trade.Species}.png" : $"{trade.Species}.png";
         var position = Info.CheckPosition(userID, routine);
         var otName = $" ({trade.OriginalTrainerName})";
 
@@ -165,7 +168,19 @@ public static class QueueHelper<T> where T : PKM, new()
 
         if (type == PokeTradeType.Specific)
         {
-            var isShiny = trade.IsShiny ? "SHINY " : "";
+            // Try to get PA9-specific 'IsAlpha' property via reflection in case T is PA9
+            bool isAlpha = false;
+            var tradeType = trade.GetType();
+            if (tradeType != null)
+            {
+                var prop = tradeType.GetProperty("IsAlpha", BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                if (prop != null && prop.PropertyType == typeof(bool))
+                {
+                    isAlpha = (bool)(prop.GetValue(trade) ?? false);
+                }
+            }
+
+            var isShiny = trade.IsShiny;
             var ball = GameInfo.GetStrings("en").balllist[trade.Ball];
             var ivs = $"{trade.IV_ATK} Atk / {trade.IV_DEF} Def / " +
                 $"{trade.IV_HP} Hp / {trade.IV_SPA} SpA / " +
@@ -197,11 +212,23 @@ public static class QueueHelper<T> where T : PKM, new()
                 requestContent += $"\n**Moves:**\n{moves}";
             }
 
-            thumbnailUrl = $"{spriteUrl}{shinyPath}";
+            var shinyPath = trade.IsShiny ? "shiny/" : "";
+            var genderPath = trade.Gender == 1 ? "female/" : "";
+            var spritePath = $"{trade.Species}.png";
+
+            var prefixReceiving = "";
+            if (isShiny && isAlpha)
+                prefixReceiving = "SHALPHA ";
+            else if (isAlpha)
+                prefixReceiving = "ALPHA ";
+            else if (isShiny)
+                prefixReceiving = "SHINY ";
+
+            thumbnailUrl = $"{spriteUrl}{shinyPath}{genderPath}{spritePath}";
             embed
                 .AddField("Trainer", $"{trader.Mention}{otName}", true)
                 .AddField("Current Position", position.Position.ToString(), true)
-                .AddField($"Requesting: {isShiny}{GameInfo.GetStrings("en").Species[trade.Species]}", requestContent);
+                .AddField($"Requesting: {prefixReceiving}{GameInfo.GetStrings("en").Species[trade.Species]}", requestContent);
 
         }
         else
