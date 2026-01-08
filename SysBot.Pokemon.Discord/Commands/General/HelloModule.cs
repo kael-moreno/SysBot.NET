@@ -18,23 +18,6 @@ public class HelloModule : ModuleBase<SocketCommandContext>
         await ReplyAsync(embed: embed).ConfigureAwait(false);
     }
 
-    [Command("unli")]
-    [Summary("Unli trade repeated")]
-    public async Task RestartBotAsync(string tids)
-    {
-        PokeTradeBotLZA.UnliTID = tids;
-        await ReplyAsync($"```Unli TID set to {tids}.```").ConfigureAwait(false);
-    }
-
-    [Command("randomcode")]
-    [Alias("code")]
-    [Summary("Set Random Trade Code")]
-    public async Task SetRandomTradeCode(int code)
-    {
-        PokeTradeBotLZA.RandomTradeCode = code;
-        await ReplyAsync($"```Random Trade Code set to {code}.```").ConfigureAwait(false);
-    }
-
     private Embed CreateEmbedBuilder(string title, string description)
     {
         var embedBuilder = new EmbedBuilder()

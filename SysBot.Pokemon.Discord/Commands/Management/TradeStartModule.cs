@@ -142,14 +142,4 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
         Name = channel.Name,
         Comment = $"Added by {Context.User.Username} on {DateTime.Now:yyyy.MM.dd-hh:mm:ss}",
     };
-
-    private Embed CreateEmbedBuilder(string title, string description)
-    {
-        var embedBuilder = new EmbedBuilder()
-            .WithTitle(title)
-            .WithDescription($"{description}")
-            .WithImageUrl("https://static0.srcdn.com/wordpress/wp-content/uploads/2022/11/pokemon-sword-shield-raihan-lose.jpg")
-            .WithColor(Color.Magenta);
-        return embedBuilder.Build();
-    }
 }

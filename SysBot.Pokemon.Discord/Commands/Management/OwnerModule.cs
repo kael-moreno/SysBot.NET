@@ -2,13 +2,19 @@ using Discord;
 using Discord.Commands;
 using PKHeX.Core;
 using System;
+using System.Collections;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace SysBot.Pokemon.Discord;
 
 public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
 {
+    private static string WorkingDirectory = Environment.CurrentDirectory = Path.GetDirectoryName(Environment.ProcessPath)!;
+    private static string ConfigPath = Path.Combine(WorkingDirectory, "config.json");
+
     [Command("addSudo")]
     [Summary("Adds mentioned user to global sudo")]
     [RequireOwner]
@@ -18,6 +24,13 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
         var users = Context.Message.MentionedUsers;
         var objects = users.Select(GetReference);
         SysCordSettings.Settings.GlobalSudoList.AddIfNew(objects);
+
+        var lines = File.ReadAllText(ConfigPath);
+        var cfg = JsonSerializer.Deserialize(lines, ProgramConfigContext.Default.ProgramConfig) ?? new ProgramConfig();
+        cfg.Hub.Discord.GlobalSudoList.AddIfNew(objects);
+        var newConfigLines = JsonSerializer.Serialize(cfg, ProgramConfigContext.Default.ProgramConfig);
+        File.WriteAllText(ConfigPath, newConfigLines);
+
         await ReplyAsync("Done.").ConfigureAwait(false);
     }
 
@@ -30,6 +43,13 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
         var users = Context.Message.MentionedUsers;
         var objects = users.Select(GetReference);
         SysCordSettings.Settings.GlobalSudoList.RemoveAll(z => objects.Any(o => o.ID == z.ID));
+
+        var lines = File.ReadAllText(ConfigPath);
+        var cfg = JsonSerializer.Deserialize(lines, ProgramConfigContext.Default.ProgramConfig) ?? new ProgramConfig();
+        cfg.Hub.Discord.GlobalSudoList.RemoveAll(z => objects.Any(o => o.ID == z.ID));
+        var newConfigLines = JsonSerializer.Serialize(cfg, ProgramConfigContext.Default.ProgramConfig);
+        File.WriteAllText(ConfigPath, newConfigLines);
+
         await ReplyAsync("Done.").ConfigureAwait(false);
     }
 
@@ -41,6 +61,13 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     {
         var obj = GetReference(Context.Message.Channel);
         SysCordSettings.Settings.ChannelWhitelist.AddIfNew([obj]);
+
+        var lines = File.ReadAllText(ConfigPath);
+        var cfg = JsonSerializer.Deserialize(lines, ProgramConfigContext.Default.ProgramConfig) ?? new ProgramConfig();
+        cfg.Hub.Discord.ChannelWhitelist.AddIfNew([obj]);
+        var newConfigLines = JsonSerializer.Serialize(cfg, ProgramConfigContext.Default.ProgramConfig);
+        File.WriteAllText(ConfigPath, newConfigLines);
+
         await ReplyAsync("Done.").ConfigureAwait(false);
     }
 
@@ -52,6 +79,13 @@ public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     {
         var obj = GetReference(Context.Message.Channel);
         SysCordSettings.Settings.ChannelWhitelist.RemoveAll(z => z.ID == obj.ID);
+
+        var lines = File.ReadAllText(ConfigPath);
+        var cfg = JsonSerializer.Deserialize(lines, ProgramConfigContext.Default.ProgramConfig) ?? new ProgramConfig();
+        cfg.Hub.Discord.ChannelWhitelist.RemoveAll(z => z.ID == obj.ID);
+        var newConfigLines = JsonSerializer.Serialize(cfg, ProgramConfigContext.Default.ProgramConfig);
+        File.WriteAllText(ConfigPath, newConfigLines);
+
         await ReplyAsync("Done.").ConfigureAwait(false);
     }
 
