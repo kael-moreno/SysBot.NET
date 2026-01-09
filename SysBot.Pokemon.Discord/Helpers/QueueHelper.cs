@@ -213,7 +213,6 @@ public static class QueueHelper<T> where T : PKM, new()
             }
 
             var shinyPath = trade.IsShiny ? "shiny/" : "";
-            var genderPath = trade.Gender == 1 ? "female/" : "";
             var spritePath = $"{trade.Species}.png";
 
             var prefixReceiving = "";
@@ -224,7 +223,7 @@ public static class QueueHelper<T> where T : PKM, new()
             else if (isShiny)
                 prefixReceiving = "SHINY ";
 
-            thumbnailUrl = $"{spriteUrl}{shinyPath}{genderPath}{spritePath}";
+            thumbnailUrl = $"{spriteUrl}{shinyPath}{spritePath}";
             embed
                 .AddField("Trainer", $"{trader.Mention}{otName}", true)
                 .AddField("Current Position", position.Position.ToString(), true)

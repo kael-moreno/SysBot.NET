@@ -14,8 +14,6 @@ namespace SysBot.Pokemon;
 // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
 public class PokeTradeBotLZA(PokeTradeHub<PA9> Hub, PokeBotState Config) : PokeRoutineExecutor9LZA(Config), ICountBot
 {
-
-    public static String UnliTID = "996212";
     private readonly TradeSettings TradeSettings = Hub.Config.Trade;
     private readonly TradeAbuseSettings AbuseSettings = Hub.Config.TradeAbuse;
 
@@ -416,7 +414,7 @@ public class PokeTradeBotLZA(PokeTradeHub<PA9> Hub, PokeBotState Config) : PokeR
             // Log for Trade Abuse tracking.
             LogSuccessfulTrades(poke, tradePartner.NID, tradePartner.TrainerName);
 
-            if (!UnliTID.Contains(tradePartner.TID7))
+            if (!TradeUtil.UnliTID.Contains(tradePartner.TID7))
             {
                 Log("Trade partner is not on UnliTID, ending after one trade.");
                 break;

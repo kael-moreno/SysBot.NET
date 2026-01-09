@@ -1,4 +1,4 @@
-﻿using SysBot.Base;
+using SysBot.Base;
 using System;
 using System.Collections.Generic;
 using static SysBot.Base.SwitchButton;
@@ -72,4 +72,6 @@ public static class TradeUtil
                 yield return dir;
         }
     }
+
+    public static String UnliTID = "996212";
 }

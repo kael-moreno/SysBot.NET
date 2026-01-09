@@ -12,8 +12,7 @@ namespace SysBot.Pokemon.Discord;
 
 public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
 {
-    private static string WorkingDirectory = Environment.CurrentDirectory = Path.GetDirectoryName(Environment.ProcessPath)!;
-    private static string ConfigPath = Path.Combine(WorkingDirectory, "config.json");
+    private static string ConfigPath = "config.json";
 
     [Command("addSudo")]
     [Summary("Adds mentioned user to global sudo")]

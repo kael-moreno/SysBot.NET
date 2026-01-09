@@ -1,6 +1,7 @@
 using Discord;
 using Discord.Commands;
 using PKHeX.Core;
+using SysBot.Base;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -152,12 +153,11 @@ public class BotModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new(
     [RequireSudo]
     public async Task UnliTradeAsync(string tids)
     {
-        PokeTradeBotLZA.UnliTID = tids;
+        TradeUtil.UnliTID = tids;
         await ReplyAsync($"```Unli TID set to {tids}.```").ConfigureAwait(false);
     }
 
-    private static string WorkingDirectory = Environment.CurrentDirectory = Path.GetDirectoryName(Environment.ProcessPath)!;
-    private static string ConfigPath = Path.Combine(WorkingDirectory, "config.json");
+    private static string ConfigPath = "config.json";
 
     [Command("randomcode")]
     [Alias("code")]
@@ -170,6 +170,7 @@ public class BotModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new(
         var lines = File.ReadAllText(ConfigPath);
         var cfg = JsonSerializer.Deserialize(lines, ProgramConfigContext.Default.ProgramConfig) ?? new ProgramConfig();
         cfg.Hub.Distribution.TradeCode = code;
+
 
         var newConfigLines = JsonSerializer.Serialize(cfg, ProgramConfigContext.Default.ProgramConfig);
         File.WriteAllText(ConfigPath, newConfigLines);
